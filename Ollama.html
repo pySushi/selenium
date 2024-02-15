@@ -82,7 +82,7 @@
 
             // Assuming Ollama's response is directly in data.choices[0].message.content
             // Adjust based on the actual response structure
-            const ollamaReply = data.message.content; // This might need adjustment
+            const ollamaReply = data.choices[0].message.content; // This might need adjustment
 
             // Append Ollama's reply to global messages array and display it
             messages.push({ role: "assistant", content: ollamaReply });
