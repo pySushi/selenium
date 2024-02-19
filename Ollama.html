@@ -90,6 +90,8 @@
             displayMessage(`Ollama: ${ollamaReply}`, 'ollama');
         } catch (error) {
             console.error('Error:', error);
+            messages.push({ role: "assistant", content: error});
+            displayMessage(`Ollama: ${error}`, 'ollama');
         }
     }
 
