@@ -1,108 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ollama Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        #chatHistory {
-            overflow-y: auto;
-            max-height: 80vh;
-            margin-bottom: 20px;
-        }
-        .message {
-            padding: 8px;
-            margin: 4px;
-            border-radius: 8px;
-        }
-        .user {
-            text-align: right;
-            background-color: #DCF8C6;
-        }
-        .ollama {
-            text-align: left;
-            background-color: #F0F0F0;
-        }
+      #chatHistory {
+        overflow-y: auto;
+        max-height: 80vh;
+        margin-bottom: 20px;
+      }
+      .message {
+        padding: 8px;
+        margin: 4px;
+        border-radius: 8px;
+      }
+      .user {
+        text-align: right;
+        background-color: #dcf8c6;
+      }
+      .ollama {
+        text-align: left;
+        background-color: #f0f0f0;
+      }
     </style>
-</head>
-<body class="bg-gray-100 flex flex-col justify-between h-screen">
-
-<div id="chatHistory" class="overflow-auto p-4">
-    <!-- Chat messages will be appended here -->
-</div>
-
-<div class="mb-4 p-4 fixed inset-x-0 bottom-0 bg-white shadow-lg">
-    <div class="flex gap-2">
-        <input type="text" id="question" placeholder="Enter your message here..."
-               class="flex-1 p-2 border rounded focus:outline-none focus:ring" onkeypress="handleKeyPress(event)">
-        <button onclick="askQuestion()"
-                class="p-2 bg-blue-500 text-white rounded hover:bg-blue-700">Send</button>
+  </head>
+  <body class="bg-gray-100 flex flex-col justify-between h-screen">
+    <div id="chatHistory" class="overflow-auto p-4">
+      <!-- Chat messages will be appended here -->
     </div>
-</div>
 
-<script>
-    let messages = []; // Global array to store the conversation history
+    <div class="mb-4 p-4 fixed inset-x-0 bottom-0 bg-white shadow-lg">
+      <div class="flex gap-2">
+        <input
+          type="text"
+          id="question"
+          placeholder="Enter your message here..."
+          class="flex-1 p-2 border rounded focus:outline-none focus:ring"
+          onkeypress="handleKeyPress(event)"
+        />
+        <button
+          onclick="askQuestion()"
+          class="p-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+        >
+          Send
+        </button>
+      </div>
+    </div>
 
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('question').focus();
-    });
+    <script>
+      let messages = []; // Global array to store the conversation history
 
-    function handleKeyPress(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            askQuestion();
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("question").focus();
+      });
+
+      function handleKeyPress(event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          askQuestion();
         }
-    }
+      }
 
-    async function askQuestion() {
-        const questionInput = document.getElementById('question');
+      async function askQuestion() {
+        const questionInput = document.getElementById("question");
         const question = questionInput.value.trim();
-
         if (!question) return;
 
-        // Append user's question to global messages array and display it
         messages.push({ role: "user", content: question });
-        displayMessage(`You: ${question}`, 'user');
-        questionInput.value = ''; // Clear input field
+        displayMessage(`You: ${question}`, "user");
+        questionInput.value = "";
 
         try {
-            const response = await fetch('http://localhost:11434/api/chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    model: "llama2",
-                    messages: messages,
-                    stream: false
-                })
-            });
+          const response = await fetch("http://65.109.144.47:5008/ask", {
+            // Assuming Flask runs on localhost:5000
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "gemma",
+              content: question,
+            }),
+          });
 
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+          if (!response.ok)
+            throw new Error(`HTTP error! Status: ${response.status}`);
 
-            const data = await response.json();
+          const message = await response.json();
 
-            // Assuming Ollama's response is directly in data.choices[0].message.content
-            // Adjust based on the actual response structure
-            const ollamaReply = data.message.content; // This might need adjustment
-
-            // Append Ollama's reply to global messages array and display it
-            messages.push({ role: "assistant", content: ollamaReply });
-            displayMessage(`Ollama: ${ollamaReply}`, 'ollama');
+          const ollamaReply = message.content; // Adjust based on the actual response structure
+          messages.push({ role: "assistant", content: ollamaReply });
+          displayMessage(`Ollama: ${ollamaReply}`, "ollama");
         } catch (error) {
-            console.error('Error:', error);
-            messages.push({ role: "assistant", content: error});
-            displayMessage(`Ollama: ${error}`, 'ollama');
+          console.error("Error:", error);
+          displayMessage(`Ollama: Error communicating with backend`, "ollama");
         }
-    }
+      }
 
-    function displayMessage(text, sender) {
-        const chatHistory = document.getElementById('chatHistory');
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', sender);
+      function displayMessage(text, sender) {
+        const chatHistory = document.getElementById("chatHistory");
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", sender);
         messageDiv.textContent = text;
         chatHistory.appendChild(messageDiv);
         chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to latest message
-    }
-</script>
-</body>
+      }
+    </script>
+  </body>
 </html>
